@@ -16,8 +16,8 @@ namespace net
 
 		void asyncSend(const void* data, size_t len);
 		void asyncSend(const std::string& content);
-		void send(const void* data, size_t len);
-		void send(const std::string& content);
+		bool send(const void* data, size_t len);
+		bool send(const std::string& content);
 
 		void setMessageCallback(const MessageCallback& cb) { messageCallback_ = cb; }
 		void setWriteCompleteCallback(const WriteCompleteCallback& cb) { writeCompleteCallback_ = cb; }

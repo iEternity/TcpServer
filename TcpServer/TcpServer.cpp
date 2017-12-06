@@ -1,5 +1,6 @@
 #include <memory>
 #include <iostream>
+#include <thread>
 #include "TcpServer.h"
 
 using namespace net;
@@ -29,6 +30,8 @@ void TcpServer::newConnection(const boost::system::error_code& error)
 		conn->setMessageCallback(messageCallback_);
 		conn->setWriteCompleteCallback(writeCompleteCallback_);
 
+		/*auto t = std::thread(std::bind(&TcpConnection::start, conn));
+		t.detach();*/
 		conn->start();
 		connections_.push_back(conn);
 

@@ -1,6 +1,7 @@
 # coding:UTF-8
 # encoding: utf-8
 #__author__ = 'zhufx'
+from openpyxl import load_workbook
 from publicfun import *
 from LuaProperty import gameConf
 from LuaDiff2zip import contrastdict,lua_hotupdate_zip
@@ -18,8 +19,32 @@ BuildConfig = {
     'channel':'tcyapp',
     'isUpdateSVN':'Y',
     'isEncrypt':'N',
-    'isYQW':'Y'
+    'isYQW':'Y',
+    'gameSrc':'',
+    'versionName':'',
+    'versionCode':''
     }
+
+def modifyLibInfoExcel(filePath, gameSrc, versionName, versionCode):
+    wb = load_workbook(filePath)
+    gameLibSheet = wb.get_sheet_by_name(u'游戏库信息')
+    gameConfigSheet = wb.get_sheet_by_name(u'游戏配置信息')
+
+    if gameSrc != '':
+        for row in range(1, gameLibSheet.max_row):
+            if gameLibSheet[row][0].value == 'gamesrc' :
+                gameLibSheet[row][1].value = gameSrc
+                break
+    
+    if versionCode != '' and versionName != '':
+        for row in range(1, gameConfigSheet.max_row):
+            if gameConfigSheet[row][0].value == 'versionName':
+                gameConfigSheet[row][1].value = versionName
+            if gameConfigSheet[row][0].value == 'versionCode':
+                gameConfigSheet[row][1].value = versionCode
+                break
+
+    wb.save(filePath)
 
 def getandversionNum(fd):
     proj_version_pattern = r'android:versionName=(\'|")(.*?)(\'|")'
@@ -143,11 +168,11 @@ def _writeGameFilesTozip(zipOutPath,rootpath,encryptstatus=True,isBoundTcyapp=Fa
 def tcyapp_zip_build(prop,isTest=False,is125=False):
     #tcyapp，lua游戏完整zip包 
     if is125:
-        zipoutdir = os.path.join(prop.output_dir, '125apk',prop.versionNum.replace(".","_"), 'tcyapp')
+        zipoutdir = os.path.join(prop.output_dir, '125')
     elif isTest:
-        zipoutdir = os.path.join(prop.output_dir, 'testapk',prop.versionNum.replace(".","_"), 'tcyapp')
+        zipoutdir = os.path.join(prop.output_dir, '888')
     else:
-        zipoutdir = os.path.join(prop.output_dir, prop.versionNum.replace(".","_"), 'tcyapp')
+        zipoutdir = os.path.join(prop.output_dir, 'release')
     if not os.path.exists(zipoutdir):
         os.makedirs(zipoutdir)
     tcyappzipoutpath = os.path.join(zipoutdir,'%s_tcyapp.zip' % prop.appName)
@@ -157,11 +182,11 @@ def tcyapp_zip_build(prop,isTest=False,is125=False):
 def tcyappios_zip_build(prop,isTest=False,is125=False):
     #tcyapp的IOS版，lua游戏完整zip包
     if is125:
-        zipoutdir = os.path.join(prop.output_dir, '125apk',prop.versionNum.replace(".","_"), 'tcyapp')
+        zipoutdir = os.path.join(prop.output_dir, '125')
     elif isTest:
-        zipoutdir = os.path.join(prop.output_dir, 'testapk',prop.versionNum.replace(".","_"), 'tcyapp')
+        zipoutdir = os.path.join(prop.output_dir, '888')
     else:
-        zipoutdir = os.path.join(prop.output_dir, prop.versionNum.replace(".","_"), 'tcyapp')
+        zipoutdir = os.path.join(prop.output_dir, 'release')
 
     if not os.path.exists(zipoutdir):
         os.makedirs(zipoutdir)
@@ -171,7 +196,8 @@ def tcyappios_zip_build(prop,isTest=False,is125=False):
 
 
 def tcyapp_Bound_zip_build(prop,isTest=False,is125=False):
-    #tcyapp，lua集成游戏完整zip包，需要AppIcon.png
+	'''
+	#tcyapp，lua集成游戏完整zip包，需要AppIcon.png
     if is125:
         zipoutdir = os.path.join(prop.output_dir, '125apk',prop.versionNum.replace(".","_"), 'tcyapp')
     elif isTest:
@@ -183,9 +209,11 @@ def tcyapp_Bound_zip_build(prop,isTest=False,is125=False):
     tcyappzipoutpath = os.path.join(zipoutdir,'%s_tcyapp_jicheng.zip' % prop.appName)
     assets_root = prop.proj_android_assets_dir
     _writeGameFilesTozip(tcyappzipoutpath,assets_root,prop.encryptstatus,isBoundTcyapp=True)
+	'''
 
 def testLuaHotUpdate(prop,recommander_id,versionNum_lower,is125=False):
-    if not is125:
+    '''
+	if not is125:
         zipoutdir = os.path.join(prop.output_dir,'testapk',prop.versionNum.replace(".","_"), versionNum_lower.replace(".","_"))
     else:
         zipoutdir = os.path.join(prop.output_dir,'125apk',prop.versionNum.replace(".","_"), versionNum_lower.replace(".","_"))
@@ -194,6 +222,7 @@ def testLuaHotUpdate(prop,recommander_id,versionNum_lower,is125=False):
     zipoutpath = os.path.join(zipoutdir,"diff_%s_%s.zip" % (prop.appName,recommander_id))
     assets_root = prop.proj_android_assets_dir
     _writeGameFilesTozip(zipoutpath,assets_root,prop.encryptstatus)
+	'''
 
 def test125build(appname,sysplatform):
     recommander_id = BuildConfig['recommendID']
@@ -833,5 +862,14 @@ if __name__ == "__main__":
     BuildConfig['isUpdateSVN']  = sys.argv[5]
     BuildConfig['isEncrypt']    = sys.argv[6]
     BuildConfig['isYQW']        = sys.argv[7]
+    BuildConfig['gameSrc']      = sys.argv[8]
+    BuildConfig['versionName']  = sys.argv[9]
+    BuildConfig['versionCode']  = sys.argv[10]
+
+    prop = gameConf(BuildConfig['appName'])
+    if BuildConfig['channel'] == "tcyappios":
+        modifyLibInfoExcel(prop.game_lib_info_file_ios, BuildConfig['gameSrc'], BuildConfig['versionName'], BuildConfig['versionCode'])
+    else:
+        modifyLibInfoExcel(prop.game_lib_info_file, BuildConfig['gameSrc'], BuildConfig['versionName'], BuildConfig['versionCode'])
 
     main(BuildConfig['appName'], "Android")

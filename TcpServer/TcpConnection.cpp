@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <thread>
 #include "TcpConnection.h"
 
 using namespace std;
@@ -36,21 +37,42 @@ void TcpConnection::asyncSend(const std::string& content)
 							 std::bind(&TcpConnection::onWriteComplete, this, _1, _2));
 }
 
-void TcpConnection::send(const void* data, size_t len)
+bool TcpConnection::send(const void* data, size_t len)
 {
-	boost::asio::write(socket_, boost::asio::buffer(data, len));
+	try
+	{
+		boost::asio::write(socket_, boost::asio::buffer(data, len));
+	}
+	catch (const std::exception& e)
+	{
+		cerr << e.what() << endl;
+		return false;
+	}
+	return true;
 }
 
-void TcpConnection::send(const std::string& content)
+bool TcpConnection::send(const std::string& content)
 {
-	boost::asio::write(socket_, boost::asio::buffer(content.data(), content.size()));
+	try
+	{
+		boost::asio::write(socket_, boost::asio::buffer(content.data(), content.size()));
+	}
+	catch (const std::exception& e)
+	{
+		cerr << e.what() << endl;
+		return false;
+	}
+	return true;
 }
 
 void TcpConnection::onMessage(const boost::system::error_code& error, size_t len)
 {
 	if (!error)
 	{
-		messageCallback_(shared_from_this(), data_, len);
+		auto t = std::thread([=](){
+			messageCallback_(shared_from_this(), data_, len);
+		});
+		t.detach();
 
 		doRead();
 	}

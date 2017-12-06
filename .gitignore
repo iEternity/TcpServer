@@ -3,3 +3,4 @@ Release/
 *.sdf
 *.suo
 TcpServer/Debug/
+*.opensdf
