@@ -29,7 +29,7 @@ namespace net
 		{ 
 			return socket_.remote_endpoint().address().to_string(); 
 		}
-		short peerPort() const 
+		unsigned short peerPort() const 
 		{ 
 			return socket_.remote_endpoint().port(); 
 		}
